@@ -18,5 +18,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
-  }
+  },
+  "files": ["index.ts", "lib.ts"]
 }
