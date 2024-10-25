@@ -1,7 +1,7 @@
 import { getElementByID } from "./lib";
 
-const musicUploaderElement = getElementByID("music-uploader");
-const musicAudioElement = getElementByID("music-audio") as HTMLAudioElement;
+const uploaderElement = getElementByID("uploader");
+const audioElement = getElementByID("audio") as HTMLAudioElement;
 
 function loadFile(event: Event) {
   const [file] = (event.target as HTMLInputElement).files || [];
@@ -12,12 +12,12 @@ function loadFile(event: Event) {
 }
 
 function addFileToSource(file: File) {
-  musicAudioElement.src = URL.createObjectURL(file);
+  audioElement.src = URL.createObjectURL(file);
 }
 
 function playMusic() {
-  musicAudioElement.play();
+  audioElement.play();
 }
 
-musicUploaderElement.addEventListener("change", loadFile);
-musicAudioElement.addEventListener("canplaythrough", playMusic);
+uploaderElement.addEventListener("change", loadFile);
+audioElement.addEventListener("canplaythrough", playMusic);
