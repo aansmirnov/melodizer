@@ -9,8 +9,18 @@
   </head>
   <body>
     <div id="app">
-      <label for="uploader"></label>
-      <input type="file" accept="audio/*" id="uploader" />
+      <div class="upload-wrapper">
+        <label class="upload-container" for="uploader">
+          <span class="upload-title">Drop file here</span>
+          or
+          <input
+            type="file"
+            accept="audio/*"
+            id="uploader"
+            class="upload-input"
+          />
+        </label>
+      </div>
     </div>
     <script type="module" src="index.ts"></script>
   </body>
