@@ -20,7 +20,7 @@ a {
 
 /** Styles */
 body {
-    background: #1e293b;
+  background: #1e293b;
 }
 
 .upload-wrapper {
@@ -39,7 +39,7 @@ body {
   height: 200px;
   padding: 20px 60px;
   border-radius: 10px;
-  border: 2px dashed #555;
+  border: 2px dashed #888;
   color: white;
   cursor: pointer;
 }
@@ -68,9 +68,25 @@ body {
   border-radius: 10px;
   color: #fff;
   cursor: pointer;
-  transition: background .2s ease-in-out;
+  transition: background 0.2s ease-in-out;
 }
 
 .upload-input::file-selector-button:hover {
   background: #0d45a5;
+}
+
+.play-button {
+  border: none;
+  display: none;
+  background: #6366f1;
+  padding: 10px 20px;
+  border-radius: 5px;
+  width: 150px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.play-button:hover {
+  background: #4338ca;
+  transition: background 0.2s ease-in-out;
 }
