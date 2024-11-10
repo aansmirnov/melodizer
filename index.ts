@@ -1,21 +1,32 @@
-import { getElementByID } from "./lib";
+import {
+  formatTime,
+  getElementByID,
+  getSourceDuration,
+  doesBuffertSourceNodeExist,
+  resetSourceNode,
+} from "./lib";
 
 const uploaderElement = getElementByID("uploader") as HTMLInputElement;
 const uploadContainerElement = getElementByID("upload-container");
-const playButtonElement = getElementByID("play-button");
+const controlButtonElement = getElementByID("control-button");
+const controlButtonContentElement = getElementByID("control-button-content");
+const leftTimeElement = getElementByID("time-left");
 
+let audioContext: AudioContext | null;
 let source: AudioBufferSourceNode | null;
 let analyser: AnalyserNode | null;
-
 let dataArray: Uint8Array | null;
-let isAudioContextSuspended = false;
+let isPlaying = false;
+let interval: number | undefined;
+let songFile: File | undefined;
+let pauseTime = 0;
 
-async function prepareFile(file: File) {
+async function prepareFile(file: File, resume = false) {
   if (source) {
-    source.stop();
+    source = resetSourceNode(source);
   }
 
-  const audioContext = new AudioContext();
+  audioContext = resume ? (audioContext as AudioContext) : new AudioContext();
 
   const buffer = await file.arrayBuffer();
   const audioData = await audioContext.decodeAudioData(buffer);
@@ -32,38 +43,71 @@ async function prepareFile(file: File) {
   source.connect(analyser);
   analyser.connect(audioContext.destination);
 
-  if (audioContext.state === "suspended") {
-    isAudioContextSuspended = true;
-    playButtonElement.style.display = "block";
+  const isSuspend = audioContext.state === "suspended";
 
-    return;
+  if (isSuspend) {
+    drawControls();
+    drawDuration();
+    leftTimeElement.innerHTML = "00:00";
   }
 
-  playSong();
+  controlButtonContentElement.innerHTML = isSuspend ? "&#x23F5;" : "&#x23F8;";
 }
 
-function playSong() {
-  if (!source) throw new Error("Buffer source not found!");
+function playSong(offset?: number) {
+  if (!doesBuffertSourceNodeExist(source)) return;
 
-  source.start();
-  draw();
+  source.start(0, offset);
+
+  isPlaying = true;
+
+  drawControls();
+  drawDuration();
+  drawAudioVisualizer();
+
+  clearInterval(interval);
+  interval = setInterval(drawProgress);
 }
 
-function draw() {
+function drawControls() {
+  const controlsElement = getElementByID("controls");
+  controlsElement.style.display = "flex";
+}
+
+function drawDuration() {
+  if (!doesBuffertSourceNodeExist(source)) return;
+
+  const rightTimeElement = getElementByID("time-right");
+  const duration = getSourceDuration(source);
+  rightTimeElement.innerHTML = String(formatTime(duration));
+}
+
+function drawProgress() {
+  if (!doesBuffertSourceNodeExist(source)) return;
+
+  const duration = getSourceDuration(source);
+  const currentTime = source.context.currentTime;
+
+  const lineProgressElement = getElementByID("line-progress");
+
+  leftTimeElement.innerHTML = String(formatTime(currentTime));
+  lineProgressElement.style.width = `${(currentTime / duration) * 100}%`;
+}
+
+function drawAudioVisualizer() {
   // @ToDO
 }
-
-// setInterval(() => {
-//   console.log(analyser.getByteFrequencyData(dataArray));
-//   console.log(dataArray);
-//   console.log(source.context.currentTime, source.buffer?.duration);
-// }, 500);
 
 uploaderElement.addEventListener("change", async (event) => {
   const [file] = (event.target as HTMLInputElement).files || [];
 
   if (file) {
-    prepareFile(file);
+    songFile = file;
+
+    clearInterval(interval);
+
+    await prepareFile(file);
+    playSong();
   }
 });
 
@@ -78,13 +122,46 @@ uploadContainerElement.addEventListener("drop", async (event) => {
     const files = event.dataTransfer.files;
     uploaderElement.files = files;
 
-    await prepareFile(files[0]);
+    const file = files[0];
+    songFile = file;
+
+    clearInterval(interval);
+
+    await prepareFile(file);
+
+    if (audioContext?.state === "suspended") {
+      source?.start();
+      return;
+    }
+
+    playSong();
   }
 });
 
-playButtonElement.addEventListener("click", () => {
-  playSong();
+controlButtonElement.addEventListener("click", async () => {
+  if (!songFile) throw new Error("File not found!");
+  if (!audioContext) throw new Error("AudioContext does not exist!");
 
-  playButtonElement.style.display = "none";
-  isAudioContextSuspended = false;
+  controlButtonContentElement.innerHTML = isPlaying ? "&#x23F5;" : "&#x23F8;";
+
+  if (isPlaying) {
+    clearInterval(interval);
+
+    pauseTime = audioContext.currentTime;
+
+    await audioContext.suspend();
+    source = resetSourceNode(source);
+
+    isPlaying = false;
+  } else {
+    await audioContext.resume();
+    await prepareFile(songFile, true);
+
+    playSong(pauseTime);
+  }
 });
+
+// setInterval(() => {
+//   console.log(analyser.getByteFrequencyData(dataArray));
+//   console.log(dataArray);
+// }, 500);

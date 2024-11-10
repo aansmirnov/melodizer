@@ -19,8 +19,21 @@
             id="uploader"
             class="upload-input"
           />
-          <button class="play-button" id="play-button">Play</button>
         </label>
+        <div class="controls" id="controls">
+          <span class="line">
+            <span class="line-progress" id="line-progress"></span>
+          </span>
+          <div class="control-time">
+            <span id="time-left"></span>
+            <span id="time-right"></span>
+          </div>
+          <button class="control-button" id="control-button">
+            <span class="control-button-content" id="control-button-content"
+              >&#x23F8;</span
+            >
+          </button>
+        </div>
       </div>
     </div>
     <script type="module" src="index.ts"></script>
