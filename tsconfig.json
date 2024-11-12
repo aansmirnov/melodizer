@@ -19,5 +19,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "files": ["index.ts", "lib.ts"]
+  "files": ["index.ts", "lib.ts", "const.ts"]
 }

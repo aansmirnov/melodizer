@@ -1,3 +1,4 @@
+import { PAUSE_SIGN, PLAY_SIGN } from "./const";
 import {
   formatTime,
   getElementByID,
@@ -12,6 +13,14 @@ const controlButtonElement = getElementByID("control-button");
 const controlButtonContentElement = getElementByID("control-button-content");
 const leftTimeElement = getElementByID("time-left");
 
+const melodizerElement = getElementByID("melodizer") as HTMLCanvasElement;
+const canvasContext = melodizerElement.getContext("2d");
+
+melodizerElement.width = window.innerWidth;
+
+const { width, height } = melodizerElement;
+const barWidth = Math.round(width / 100);
+
 let audioContext: AudioContext | null;
 let source: AudioBufferSourceNode | null;
 let analyser: AnalyserNode | null;
@@ -20,6 +29,8 @@ let isPlaying = false;
 let interval: number | undefined;
 let songFile: File | undefined;
 let pauseTime = 0;
+let animationFrame: number | null;
+let isEnded = false;
 
 async function prepareFile(file: File, resume = false) {
   if (source) {
@@ -51,7 +62,7 @@ async function prepareFile(file: File, resume = false) {
     leftTimeElement.innerHTML = "00:00";
   }
 
-  controlButtonContentElement.innerHTML = isSuspend ? "&#x23F5;" : "&#x23F8;";
+  controlButtonContentElement.innerHTML = isSuspend ? PLAY_SIGN : PAUSE_SIGN;
 }
 
 function playSong(offset?: number) {
@@ -60,6 +71,8 @@ function playSong(offset?: number) {
   source.start(0, offset);
 
   isPlaying = true;
+
+  if (animationFrame) window.cancelAnimationFrame(animationFrame);
 
   drawControls();
   drawDuration();
@@ -83,10 +96,12 @@ function drawDuration() {
 }
 
 function drawProgress() {
-  if (!doesBuffertSourceNodeExist(source)) return;
+  if (isEnded || !doesBuffertSourceNodeExist(source)) return;
 
   const duration = getSourceDuration(source);
   const currentTime = source.context.currentTime;
+
+  if (Math.floor(duration) === Math.floor(currentTime)) stopSong();
 
   const lineProgressElement = getElementByID("line-progress");
 
@@ -94,8 +109,36 @@ function drawProgress() {
   lineProgressElement.style.width = `${(currentTime / duration) * 100}%`;
 }
 
+function stopSong() {
+  isEnded = true;
+  isPlaying = false;
+
+  controlButtonContentElement.innerHTML = PLAY_SIGN;
+}
+
 function drawAudioVisualizer() {
-  // @ToDO
+  if (!canvasContext) throw new Error("2D context is not supported!");
+  if (!analyser) throw new Error("Analyser not found!");
+  if (!dataArray) throw new Error("DataArray is empty!");
+
+  let barHeight;
+  let x = 0;
+
+  animationFrame = requestAnimationFrame(drawAudioVisualizer);
+
+  analyser.getByteFrequencyData(dataArray);
+  canvasContext.clearRect(0, 0, width, height);
+
+  for (let i = 0; i < dataArray.length; i++) {
+    barHeight = dataArray[i];
+
+    const hue = (i / dataArray.length) * 360;
+
+    canvasContext.fillStyle = `hsl(${hue}, 100%, 50%)`;
+    canvasContext.fillRect(x, height - barHeight / 2, barWidth, barHeight / 2);
+
+    x += barWidth;
+  }
 }
 
 uploaderElement.addEventListener("change", async (event) => {
@@ -142,11 +185,11 @@ controlButtonElement.addEventListener("click", async () => {
   if (!songFile) throw new Error("File not found!");
   if (!audioContext) throw new Error("AudioContext does not exist!");
 
-  controlButtonContentElement.innerHTML = isPlaying ? "&#x23F5;" : "&#x23F8;";
+  controlButtonContentElement.innerHTML = isPlaying ? PLAY_SIGN : PAUSE_SIGN;
+
+  if (isPlaying || isEnded) clearInterval(interval);
 
   if (isPlaying) {
-    clearInterval(interval);
-
     pauseTime = audioContext.currentTime;
 
     await audioContext.suspend();
@@ -155,13 +198,11 @@ controlButtonElement.addEventListener("click", async () => {
     isPlaying = false;
   } else {
     await audioContext.resume();
-    await prepareFile(songFile, true);
+    await prepareFile(songFile, !isEnded);
 
-    playSong(pauseTime);
+    isEnded = isEnded ? false : isEnded;
+    const offset = isEnded ? undefined : pauseTime;
+
+    playSong(offset);
   }
 });
-
-// setInterval(() => {
-//   console.log(analyser.getByteFrequencyData(dataArray));
-//   console.log(dataArray);
-// }, 500);

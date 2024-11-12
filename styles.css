@@ -126,3 +126,9 @@ body {
   color: white;
   font-size: 22px;
 }
+
+.melodizer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
