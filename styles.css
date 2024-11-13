@@ -1,12 +1,5 @@
 /** Reset */
 body,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-p,
 span,
 a {
   margin: 0;
@@ -24,10 +17,43 @@ body {
 }
 
 .upload-wrapper {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+  height: 100vh;
+}
+
+.socials {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.socials span {
+  margin-top: 2px;
+}
+
+.socials svg {
+  width: 20px;
+  height: 20px;
+}
+
+.socials a {
+  display: flex;
+  gap: 6px;
+}
+
+.socials a,
+.socials a:visited {
+  color: white;
+}
+
+.socials a:hover {
+  transition: color 0.2s ease-in-out;
+  color: #60a5fa;
 }
 
 .upload-container {
