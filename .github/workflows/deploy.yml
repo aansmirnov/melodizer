@@ -1,11 +1,5 @@
 name: Deploy
 
-on:
-  workflow_run:
-    workflows: [CLI]
-    branches: [main]
-    types: [completed]
-
 permissions:
   contents: read
   pages: write
