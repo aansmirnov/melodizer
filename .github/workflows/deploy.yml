@@ -1,5 +1,7 @@
 name: Deploy
 
+on: [push]
+
 permissions:
   contents: read
   pages: write
