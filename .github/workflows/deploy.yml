@@ -1,11 +1,12 @@
 name: Deploy
 
-on: [push]
+on:
+  push:
+    branches: [ "main" ]
 
 permissions:
   contents: read
   pages: write
-  id-token: write
 
 jobs:
   deploy:
@@ -13,7 +14,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}  
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
     - name: Checkout
       uses: actions/checkout@v4
